@@ -1,0 +1,29 @@
+[package]
+name = "memory_blog_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+sea-orm = { version = "0.12", features = [ "sqlx-mysql", "runtime-tokio-rustls", "macros", "mock" ] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+dotenvy = "0.15"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tower = { version = "0.4", features = ["util"] }
+http-body-util = "0.1"
+
+[lib]
+name = "memory_blog_rust"
+path = "src/lib.rs"
+
+[[bin]]
+name = "memory_blog_rust_bin"
+path = "src/main.rs"

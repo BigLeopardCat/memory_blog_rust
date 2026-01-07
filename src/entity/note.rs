@@ -1,0 +1,43 @@
+use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
+#[sea_orm(table_name = "note")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: i32,
+    pub title: String,
+    #[sea_orm(column_type = "Text")]
+    pub content: String,
+    // New fields
+    #[sea_orm(column_type = "Text", nullable)]
+    pub description: Option<String>,
+    pub cover: Option<String>,
+    pub is_top: Option<i32>, // 0 or 1
+    pub status: Option<String>, // 'published', etc
+    
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
+    pub is_public: bool,
+    pub category_id: Option<i32>,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::category::Entity",
+        from = "Column::CategoryId",
+        to = "super::category::Column::Id",
+        on_update = "NoAction",
+        on_delete = "SetNull"
+    )]
+    Category,
+}
+
+impl Related<super::category::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Category.def()
+    }
+}
+
+impl ActiveModelBehavior for ActiveModel {}

@@ -1,0 +1,101 @@
+use axum::{Json, extract::{State, Path}};
+use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set, ModelTrait, QueryFilter, ColumnTrait};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use crate::entity::friend;
+use crate::routes::AppState;
+use crate::utils::ApiResponse;
+
+#[derive(Serialize)]
+pub struct FriendDto {
+    #[serde(rename = "friendKey")]
+    pub id: i32,
+    #[serde(rename = "siteName")]
+    pub name: String,
+    #[serde(rename = "siteUrl")]
+    pub url: String,
+    pub avatar: String,
+    pub description: String,
+    pub status: i32,
+}
+
+pub async fn list_friends(
+    State(state): State<Arc<AppState>>,
+) -> Json<ApiResponse<Vec<FriendDto>>> {
+    let friends = friend::Entity::find().all(&state.db).await.unwrap_or(vec![]);
+    let dtos = friends.into_iter().map(|f| FriendDto {
+        id: f.id,
+        name: f.name,
+        url: f.link,
+        avatar: f.avatar.unwrap_or_default(),
+        description: f.description.unwrap_or_default(),
+        status: f.status.unwrap_or(0),
+    }).collect();
+    Json(ApiResponse::success(dtos))
+}
+
+#[derive(Deserialize)]
+pub struct UpsertFriend {
+    #[serde(rename = "siteName")]
+    name: String,
+    #[serde(rename = "siteUrl")]
+    url: String,
+    avatar: String,
+    description: String,
+    status: Option<i32>,
+}
+
+pub async fn create_friend(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<UpsertFriend>,
+) -> Json<ApiResponse<String>> {
+    let f = friend::ActiveModel {
+        name: Set(payload.name),
+        link: Set(payload.url),
+        avatar: Set(Some(payload.avatar)),
+        description: Set(Some(payload.description)),
+        status: Set(payload.status.or(Some(1))),
+        ..Default::default()
+    };
+    friend::Entity::insert(f).exec(&state.db).await.unwrap();
+    Json(ApiResponse::success("Created".to_string()))
+}
+
+pub async fn update_friend(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<i32>,
+    Json(payload): Json<UpsertFriend>,
+) -> Json<ApiResponse<String>> {
+    let f = friend::Entity::find_by_id(id).one(&state.db).await.unwrap();
+    if let Some(x) = f {
+        let mut a: friend::ActiveModel = x.into();
+        a.name = Set(payload.name);
+        a.link = Set(payload.url);
+        a.avatar = Set(Some(payload.avatar));
+        a.description = Set(Some(payload.description));
+        a.status = Set(payload.status.or(Some(1)));
+        a.update(&state.db).await.unwrap();
+        Json(ApiResponse::success("Updated".to_string()))
+    } else {
+        Json(ApiResponse::error("Not found"))
+    }
+}
+
+pub async fn delete_friend(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<i32>,
+) -> Json<ApiResponse<String>> {
+    friend::Entity::delete_by_id(id).exec(&state.db).await.unwrap();
+    Json(ApiResponse::success("Deleted".to_string()))
+}
+
+pub async fn delete_friends(
+    State(state): State<Arc<AppState>>,
+    Json(keys): Json<Vec<i32>>,
+) -> Json<ApiResponse<String>> {
+    let _ = friend::Entity::delete_many()
+        .filter(friend::Column::Id.is_in(keys))
+        .exec(&state.db)
+        .await;
+    Json(ApiResponse::success("Deleted".to_string()))
+}
