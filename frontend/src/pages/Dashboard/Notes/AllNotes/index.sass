@@ -1,0 +1,33 @@
+.AllCard
+  margin-top: 10px
+  height: 63%
+  .searchRes
+    line-height: 200px
+    text-align: center
+    background: transparent
+    border-radius: 10px
+    margin-top: 16px
+    max-width: 98%
+    margin-left: 1%
+    overflow-y: hidden
+    overflow-x: hidden
+    height: 100%
+    @media only screen and (max-width: 1530px)
+      height: 100%
+      overflow-x: hidden
+
+// Dark Mode Support
+:global(.CardDark)
+  .AllCard
+    // Fix Form Labels (Search Box area)
+    .ant-form-item-label > label
+      color: rgba(255, 255, 255, 0.85) !important
+
+    // Fix Tabs Text (All, Private, Drafts)
+    .ant-tabs-tab
+      color: rgba(255, 255, 255, 0.65) !important
+      &:hover
+        color: #4096ff !important
+      
+    .ant-tabs-tab-active .ant-tabs-tab-btn
+      color: #1677ff !important

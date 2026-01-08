@@ -6,3 +6,4 @@ pub mod tag_two;
 pub mod friend;
 pub mod talk;
 pub mod web_info;
+pub mod image;

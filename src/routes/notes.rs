@@ -1,5 +1,5 @@
 use axum::{Json, extract::{State, Query, Path}};
-use sea_orm::{DatabaseConnection, EntityTrait, ColumnTrait, QueryFilter, QueryOrder, Condition, ActiveModelTrait, ActiveValue, Set, ModelTrait};
+use sea_orm::{EntityTrait, ColumnTrait, QueryFilter, QueryOrder, Condition, ActiveModelTrait, Set, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use crate::entity::{note, category};
@@ -41,14 +41,38 @@ pub struct NoteDto {
     pub is_top: i32,
     pub status: String,
     
+    // Corrected fields for frontend compatibility
     #[serde(rename = "noteCategory")]
-    pub category_name: Option<String>, 
+    pub category_id: Option<i32>, 
     #[serde(rename = "categoryTitle")]
     pub category_title: Option<String>,
     
     pub is_public: bool,
     #[serde(rename = "noteTags")]
-    pub tags: Vec<i32>, 
+    pub tags: String, 
+}
+
+fn map_note(n: note::Model, cat: Option<category::Model>) -> NoteDto {
+    let cat_id = cat.as_ref().map(|c| c.id);
+    let cat_name = cat.map(|c| c.name);
+    
+    NoteDto {
+        id: n.id,
+        key: n.id,
+        title: n.title,
+        content: n.content.clone(),
+        content_raw: n.content,
+        description: n.description.unwrap_or_default(),
+        cover: n.cover.unwrap_or_default(),
+        created_at: n.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+        updated_at: n.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+        is_top: n.is_top.unwrap_or(0),
+        status: n.status.unwrap_or("published".to_string()),
+        category_id: cat_id,
+        category_title: cat_name,
+        is_public: n.is_public,
+        tags: "".to_string(), // Placeholder as tags support is missing in DB
+    }
 }
 
 pub async fn list_public_notes(
@@ -61,8 +85,38 @@ pub async fn list_public_notes(
         condition = condition.add(note::Column::CategoryId.eq(cat_id));
     }
 
-    let notes = note::Entity::find()
+    // STRICT FILTER FOR PUBLIC API
+    condition = condition.add(note::Column::IsPublic.eq(true));
+    condition = condition.add(note::Column::Status.ne("draft"));
+
+    // PAGINATION LOGIC
+    let page = query.page.unwrap_or(1);
+    let per_page = 6;
+    
+    let paginator = note::Entity::find()
         .filter(condition)
+        .order_by_desc(note::Column::CreatedAt)
+        .find_also_related(category::Entity)
+        .paginate(&state.db, per_page);
+
+    let notes = paginator
+        .fetch_page(page - 1)
+        .await
+        .unwrap_or(vec![]);
+
+    let dtos = notes.into_iter().map(|(n, cat)| {
+        map_note(n, cat)
+    }).collect();
+
+    Json(ApiResponse::success(dtos))
+}
+
+// ADMIN FUNCTION: List ALL notes
+pub async fn list_all_notes(
+    State(state): State<Arc<AppState>>,
+) -> Json<ApiResponse<Vec<NoteDto>>> {
+    // No filters on public/status
+    let notes = note::Entity::find()
         .order_by_desc(note::Column::CreatedAt)
         .find_with_related(category::Entity)
         .all(&state.db)
@@ -70,25 +124,7 @@ pub async fn list_public_notes(
         .unwrap_or(vec![]);
 
     let dtos = notes.into_iter().map(|(n, cats)| {
-        let cat = cats.into_iter().next();
-        let cat_name = cat.map(|c| c.name);
-        NoteDto {
-            id: n.id,
-            key: n.id,
-            title: n.title.clone(),
-            content: n.content.clone(),
-            content_raw: n.content,
-            description: n.description.unwrap_or_default(),
-            cover: n.cover.unwrap_or_default(),
-            created_at: n.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-             updated_at: n.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-            is_top: n.is_top.unwrap_or(0),
-            status: n.status.unwrap_or("published".to_string()),
-            category_name: cat_name.clone(),
-            category_title: cat_name,
-            is_public: n.is_public,
-            tags: vec![],
-        }
+        map_note(n, cats.into_iter().next())
     }).collect();
 
     Json(ApiResponse::success(dtos))
@@ -96,44 +132,109 @@ pub async fn list_public_notes(
 
 #[derive(Deserialize)]
 pub struct SearchRequest {
-    keyword: String,
+    pub keyword: Option<String>,
+    pub categories: Option<String>,
+    pub status: Option<String>,
 }
 
 pub async fn search_notes(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SearchRequest>,
 ) -> Json<ApiResponse<Vec<NoteDto>>> {
-     let notes = note::Entity::find()
-        .filter(
-            Condition::any()
-                .add(note::Column::Title.contains(&payload.keyword))
-                .add(note::Column::Content.contains(&payload.keyword))
-        )
+    let mut condition = Condition::all();
+
+    if let Some(ref k) = payload.keyword {
+         if !k.is_empty() {
+             condition = condition.add(
+                Condition::any()
+                    .add(note::Column::Title.contains(k))
+                    .add(note::Column::Content.contains(k))
+             );
+         }
+    }
+
+    if let Some(ref cat_name) = payload.categories {
+        let cat_model = category::Entity::find()
+            .filter(category::Column::Name.eq(cat_name))
+            .one(&state.db)
+            .await
+            .unwrap_or(None);
+            
+        if let Some(c) = cat_model {
+            condition = condition.add(note::Column::CategoryId.eq(c.id));
+        } else {
+             return Json(ApiResponse::success(vec![]));
+        }
+    }
+    
+    if let Some(ref s) = payload.status {
+         condition = condition.add(note::Column::Status.eq(s));
+    }
+    
+    // ENFORCE PUBLIC FOR PUBLIC SEARCH
+    condition = condition.add(note::Column::IsPublic.eq(true));
+    condition = condition.add(note::Column::Status.ne("draft"));
+
+    let notes = note::Entity::find()
+        .filter(condition)
         .find_with_related(category::Entity)
         .all(&state.db)
         .await
         .unwrap_or(vec![]);
 
-     let dtos = notes.into_iter().map(|(n, cats)| {
-        let cat = cats.into_iter().next();
-        let cat_name = cat.map(|c| c.name);
-        NoteDto {
-            id: n.id,
-            key: n.id,
-            title: n.title.clone(),
-            content: n.content.clone(),
-            content_raw: n.content,
-             description: n.description.unwrap_or_default(),
-            cover: n.cover.unwrap_or_default(),
-             created_at: n.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-             updated_at: n.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-            is_top: n.is_top.unwrap_or(0),
-            status: n.status.unwrap_or("published".to_string()),
-            category_name: cat_name.clone(),
-            category_title: cat_name,
-            is_public: n.is_public,
-             tags: vec![],
+    let dtos = notes.into_iter().map(|(n, cats)| {
+        map_note(n, cats.into_iter().next())
+    }).collect();
+
+    Json(ApiResponse::success(dtos))
+}
+
+// ADMIN FUNCTION: Search ALL notes
+pub async fn search_all_notes(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<SearchRequest>,
+) -> Json<ApiResponse<Vec<NoteDto>>> {
+    let mut condition = Condition::all();
+
+    if let Some(ref k) = payload.keyword {
+         if !k.is_empty() {
+             condition = condition.add(
+                Condition::any()
+                    .add(note::Column::Title.contains(k))
+                    .add(note::Column::Content.contains(k))
+             );
+         }
+    }
+
+    if let Some(ref cat_name) = payload.categories {
+        let cat_model = category::Entity::find()
+            .filter(category::Column::Name.eq(cat_name))
+            .one(&state.db)
+            .await
+            .unwrap_or(None);
+            
+        if let Some(c) = cat_model {
+            condition = condition.add(note::Column::CategoryId.eq(c.id));
+        } else {
+             return Json(ApiResponse::success(vec![]));
         }
+    }
+    
+    if let Some(ref s) = payload.status {
+         condition = condition.add(note::Column::Status.eq(s));
+    }
+    
+    // NO PUBLIC FILTER
+
+    let notes = note::Entity::find()
+        .filter(condition)
+        .find_with_related(category::Entity)
+        .all(&state.db)
+        .await
+        .unwrap_or(vec![]);
+
+    let dtos = notes.into_iter().map(|(n, cats)| {
+        map_note(n, cats.into_iter().next())
     }).collect();
 
     Json(ApiResponse::success(dtos))
@@ -142,9 +243,9 @@ pub async fn search_notes(
 #[derive(Deserialize)]
 pub struct UpsertNoteRequest {
     #[serde(rename = "noteTitle")]
-    pub title: String,
+    pub title: Option<String>, 
     #[serde(rename = "noteContent")]
-    pub content: String,
+    pub content: Option<String>,
     
     #[serde(rename = "noteCategory")]
     pub category_id: Option<i32>, 
@@ -157,41 +258,27 @@ pub struct UpsertNoteRequest {
     
     #[serde(rename = "noteTags")]
     pub tags: Option<String>,
-
-    #[serde(default)]
-    pub is_public: bool,
+    
+    pub is_public: Option<bool>, 
 }
 
 pub async fn get_top_notes(
     State(state): State<Arc<AppState>>,
 ) -> Json<ApiResponse<Vec<NoteDto>>> {
+    let mut condition = Condition::all();
+    condition = condition.add(note::Column::IsTop.eq(1));
+    condition = condition.add(note::Column::IsPublic.eq(true));
+    condition = condition.add(note::Column::Status.ne("draft"));
+
     let notes = note::Entity::find()
-        .filter(note::Column::IsTop.eq(1))
+        .filter(condition)
         .find_with_related(category::Entity)
         .all(&state.db)
         .await
         .unwrap_or(vec![]);
 
      let dtos = notes.into_iter().map(|(n, cats)| {
-        let cat = cats.into_iter().next();
-        let cat_name = cat.map(|c| c.name);
-        NoteDto {
-            id: n.id,
-            key: n.id,
-            title: n.title.clone(),
-            content: n.content.clone(),
-            content_raw: n.content,
-             description: n.description.unwrap_or_default(),
-            cover: n.cover.unwrap_or_default(),
-             created_at: n.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-             updated_at: n.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-            is_top: n.is_top.unwrap_or(0),
-            status: n.status.unwrap_or("published".to_string()),
-            category_name: cat_name.clone(),
-            category_title: cat_name,
-            is_public: n.is_public,
-             tags: vec![],
-        }
+        map_note(n, cats.into_iter().next())
     }).collect();
 
     Json(ApiResponse::success(dtos))
@@ -201,17 +288,29 @@ pub async fn create_note(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<UpsertNoteRequest>,
 ) -> Json<ApiResponse<String>> {
+    let title = payload.title.unwrap_or_else(|| "Untitled".to_string());
+    let content = payload.content.unwrap_or_default();
+    
+    // Determine is_public logic
+    let mut is_public = payload.is_public.unwrap_or(true);
+    let status_str = payload.status.clone().unwrap_or("published".to_string());
+    
+    if status_str == "draft" || status_str == "private" {
+        is_public = false;
+    }
+    
     let new_note = note::ActiveModel {
-        title: Set(payload.title),
-        content: Set(payload.content),
-        is_public: Set(payload.is_public),
+        title: Set(title),
+        content: Set(content),
+        is_public: Set(is_public),
         category_id: Set(payload.category_id),
         description: Set(payload.description),
         cover: Set(payload.cover),
         is_top: Set(payload.is_top),
-        status: Set(payload.status),
+        status: Set(Some(status_str)),
         created_at: Set(chrono::Local::now().naive_local()),
         updated_at: Set(chrono::Local::now().naive_local()),
+        // tags: Set(payload.tags), // REMOVED
         ..Default::default()
     };
 
@@ -230,13 +329,36 @@ pub async fn update_note(
     
     if let Some(n) = note_data {
         let mut active_model: note::ActiveModel = n.into();
-        active_model.title = Set(payload.title);
-        active_model.content = Set(payload.content);
-        active_model.category_id = Set(payload.category_id);
-        active_model.description = Set(payload.description);
-        active_model.cover = Set(payload.cover);
-        active_model.is_top = Set(payload.is_top);
-        active_model.status = Set(payload.status);
+        
+        if let Some(v) = payload.title { active_model.title = Set(v); }
+        if let Some(v) = payload.content { active_model.content = Set(v); }
+        if let Some(v) = payload.category_id { active_model.category_id = Set(Some(v)); }
+        
+        if let Some(v) = payload.description { active_model.description = Set(Some(v)); }
+        if let Some(v) = payload.cover { active_model.cover = Set(Some(v)); }
+        if let Some(v) = payload.is_top { active_model.is_top = Set(Some(v)); }
+        // if let Some(v) = payload.tags { active_model.tags = Set(Some(v)); } // REMOVED
+        
+        // Handle Status and Visibility logic
+        if let Some(v) = payload.status.clone() { 
+            active_model.status = Set(Some(v.clone()));
+            if v == "public" || v == "published" {
+                 active_model.is_public = Set(true);
+            } else if v == "private" || v == "draft" {
+                 active_model.is_public = Set(false);
+            }
+        }
+        
+        // If explicit is_public is passed, it overrides (or cooperates)
+        if let Some(v) = payload.is_public { active_model.is_public = Set(v); }
+        
+        // Double check consistency if status was updated
+        if let Some(status_val) = payload.status {
+             if status_val == "draft" || status_val == "private" {
+                 active_model.is_public = Set(false);
+             }
+        }
+
         active_model.updated_at = Set(chrono::Local::now().naive_local());
         
         match active_model.update(&state.db).await {
@@ -270,27 +392,9 @@ pub async fn get_note_detail(
         .all(&state.db)
         .await
         .unwrap_or(vec![]);
-
+    
     let dto = res.into_iter().next().map(|(n, cats)| {
-         let cat = cats.into_iter().next();
-         let cat_name = cat.map(|c| c.name);
-         NoteDto {
-            id: n.id,
-            key: n.id,
-            title: n.title.clone(),
-            content: n.content.clone(),
-            content_raw: n.content,
-             description: n.description.unwrap_or_default(),
-            cover: n.cover.unwrap_or_default(),
-             created_at: n.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-             updated_at: n.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-            is_top: n.is_top.unwrap_or(0),
-            status: n.status.unwrap_or("published".to_string()),
-            category_name: cat_name.clone(),
-            category_title: cat_name,
-            is_public: n.is_public,
-             tags: vec![],
-         }
+        map_note(n, cats.into_iter().next())
     });
 
     Json(ApiResponse::success(dto))

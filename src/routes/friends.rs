@@ -1,10 +1,11 @@
 use axum::{Json, extract::{State, Path}};
-use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set, ModelTrait, QueryFilter, ColumnTrait};
+use sea_orm::{EntityTrait, ActiveModelTrait, Set, QueryFilter, ColumnTrait};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use crate::entity::friend;
 use crate::routes::AppState;
 use crate::utils::ApiResponse;
+use serde_json::Value;
 
 #[derive(Serialize)]
 pub struct FriendDto {
@@ -23,6 +24,25 @@ pub async fn list_friends(
     State(state): State<Arc<AppState>>,
 ) -> Json<ApiResponse<Vec<FriendDto>>> {
     let friends = friend::Entity::find().all(&state.db).await.unwrap_or(vec![]);
+    let dtos = friends.into_iter().map(|f| FriendDto {
+        id: f.id,
+        name: f.name,
+        url: f.link,
+        avatar: f.avatar.unwrap_or_default(),
+        description: f.description.unwrap_or_default(),
+        status: f.status.unwrap_or(0),
+    }).collect();
+    Json(ApiResponse::success(dtos))
+}
+
+pub async fn list_public_friends(
+    State(state): State<Arc<AppState>>,
+) -> Json<ApiResponse<Vec<FriendDto>>> {
+    let friends = friend::Entity::find()
+        .filter(friend::Column::Status.eq(1))
+        .all(&state.db)
+        .await
+        .unwrap_or(vec![]);
     let dtos = friends.into_iter().map(|f| FriendDto {
         id: f.id,
         name: f.name,
@@ -54,7 +74,7 @@ pub async fn create_friend(
         link: Set(payload.url),
         avatar: Set(Some(payload.avatar)),
         description: Set(Some(payload.description)),
-        status: Set(payload.status.or(Some(1))),
+        status: Set(payload.status.or(Some(0))),
         ..Default::default()
     };
     friend::Entity::insert(f).exec(&state.db).await.unwrap();
@@ -91,11 +111,27 @@ pub async fn delete_friend(
 
 pub async fn delete_friends(
     State(state): State<Arc<AppState>>,
-    Json(keys): Json<Vec<i32>>,
+    Json(keys_raw): Json<Vec<Value>>,
 ) -> Json<ApiResponse<String>> {
-    let _ = friend::Entity::delete_many()
+    let keys: Vec<i32> = keys_raw.iter().filter_map(|v| {
+        if let Some(n) = v.as_i64() {
+            Some(n as i32)
+        } else if let Some(s) = v.as_str() {
+            s.parse::<i32>().ok()
+        } else {
+            None
+        }
+    }).collect();
+
+    if keys.is_empty() {
+        return Json(ApiResponse::error("No valid keys provided"));
+    }
+
+    match friend::Entity::delete_many()
         .filter(friend::Column::Id.is_in(keys))
         .exec(&state.db)
-        .await;
-    Json(ApiResponse::success("Deleted".to_string()))
+        .await {
+            Ok(_) => Json(ApiResponse::success("Deleted".to_string())),
+            Err(e) => Json(ApiResponse::error(&format!("Error: {}", e)))
+        }
 }

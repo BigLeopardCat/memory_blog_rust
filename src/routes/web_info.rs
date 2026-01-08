@@ -1,10 +1,11 @@
 use axum::{Json, extract::State};
-use sea_orm::{DatabaseConnection, EntityTrait, ColumnTrait, QueryFilter, ActiveModelTrait, Set, ActiveValue};
+use sea_orm::{EntityTrait, ColumnTrait, QueryFilter, ActiveModelTrait, Set};
 use std::sync::Arc;
 use crate::entity::{web_info, user};
 use crate::routes::AppState;
-use crate::utils::ApiResponse;
+use crate::utils::{ApiResponse, encrypt_password};
 use serde::{Deserialize, Serialize};
+use tracing::info;
 
 #[derive(Serialize)]
 pub struct UserInfoResponse {
@@ -22,11 +23,18 @@ pub struct UserInfoResponse {
 
 #[derive(Serialize, Deserialize)]
 pub struct SocialInfo {
+    #[serde(rename = "socialGithub")]
     github: String,
+    #[serde(rename = "socialQQ")]
     qq: String,
+    #[serde(rename = "socialWechat")]
     wechat: String,
+    #[serde(rename = "socialBilibili")]
     bilibili: String,
+    #[serde(rename = "socialEmail")]
     email: String,
+    #[serde(rename = "socialNeteaseCloud")]
+    netease: String,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -85,7 +93,7 @@ pub async fn get_web_settings(
 
     let user = user::Entity::find_by_id(1).one(&state.db).await.unwrap_or(None);
     let (u_acc, u_pass) = if let Some(u) = user {
-        (Some(u.username), Some(u.password))
+        (Some("".to_string()), Some("".to_string()))
     } else {
         (Some("".to_string()), Some("".to_string()))
     };
@@ -151,6 +159,7 @@ pub async fn get_social_info(
          wechat: get_val("wechat"),
          bilibili: get_val("bilibili"),
          email: get_val("email"),
+         netease: get_val("socialNeteaseCloud"),
      };
      Json(ApiResponse::success(data))
 }
@@ -163,10 +172,14 @@ pub async fn update_web_info(
         if !acc.is_empty() && !pass.is_empty() {
              let user = user::Entity::find_by_id(1).one(&state.db).await.unwrap_or(None);
              if let Some(u) = user {
+                 let enc_acc = encrypt_password(acc);
+                 let enc_pass = encrypt_password(pass);
+                 
                  let mut active: user::ActiveModel = u.into();
-                 active.username = Set(acc.clone());
-                 active.password = Set(pass.clone());
+                 active.username = Set(enc_acc);
+                 active.password = Set(enc_pass);
                  let _ = active.update(&state.db).await;
+                 info!("User credentials updated with encryption.");
              }
         }
     }
@@ -240,6 +253,7 @@ pub async fn update_social_info(
     params.insert("wechat", payload.wechat);
     params.insert("bilibili", payload.bilibili);
     params.insert("email", payload.email);
+    params.insert("socialNeteaseCloud", payload.netease);
 
     for (k, v) in params {
         let entry = web_info::Entity::find()

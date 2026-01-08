@@ -5,13 +5,15 @@ pub mod tags;
 pub mod friends;
 pub mod web_info;
 pub mod talks;
+pub mod upload;
 
 use axum::{
     routing::{get, post, delete, put},
     Router,
+    middleware,
 };
 use sea_orm::DatabaseConnection;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
 
 pub struct AppState {
     pub db: DatabaseConnection,
@@ -22,8 +24,10 @@ pub fn create_router(state: AppState) -> Router {
         .allow_origin(Any)
         .allow_methods(Any)
         .allow_headers(Any);
+    
+    let state_arc = std::sync::Arc::new(state);
 
-    Router::new()
+    let public_routes = Router::new()
         // Auth
         .route("/api/login", post(auth::login))
         
@@ -46,7 +50,7 @@ pub fn create_router(state: AppState) -> Router {
         
         // Friends
         .route("/api/friends", get(friends::list_friends)) 
-        .route("/api/public/friends", get(friends::list_friends)
+        .route("/api/public/friends", get(friends::list_public_friends)
             .post(friends::create_friend))
         
         // Talks
@@ -56,10 +60,21 @@ pub fn create_router(state: AppState) -> Router {
         // Web/User Public
         .route("/api/public/user", get(web_info::get_user_info))
         .route("/api/public/social", get(web_info::get_social_info))
-
-        // --- Protected / Admin Routes ---
         
-        // Notes
+        // Static Image Download (Public)
+        .nest_service("/api/protect/download", ServeDir::new("/opt/memory_blog_rust/uploads"));
+
+    let protected_routes = Router::new()
+        // Images
+        .route("/api/protect/upload", post(upload::upload_image))
+        .route("/api/protect/images", get(upload::list_images))
+        .route("/api/protect/delImg", delete(upload::delete_images))
+
+        // Notes Protected
+        // NEW ADMIN ROUTE for listing all notes
+        .route("/api/protected/notes/list", get(notes::list_all_notes))
+        .route("/api/protected/notes/search", post(notes::search_all_notes))
+        
         .route("/api/protected/notes", 
             post(notes::create_note)
             .delete(notes::delete_note)
@@ -94,7 +109,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/protected/friends/:id", 
              post(friends::update_friend) 
         )
-                                                                                                                                   
+
         // Talks
         .route("/api/protect/talk", 
              post(talks::create_talk)
@@ -114,6 +129,10 @@ pub fn create_router(state: AppState) -> Router {
         )
         .route("/api/protected/social", put(web_info::update_social_info))
         
+        .route_layer(middleware::from_fn(crate::middleware::auth_guard));
+
+    public_routes
+        .merge(protected_routes)
         .layer(cors)
-        .with_state(std::sync::Arc::new(state))
+        .with_state(state_arc)
 }

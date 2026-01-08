@@ -1,0 +1,137 @@
+import warnings
+warnings.filterwarnings("ignore")
+
+import requests
+import unittest
+import json
+
+BASE_URL = "http://localhost:3000"
+
+class TestFrontendContract(unittest.TestCase):
+
+    def setUp(self):
+        self.session = requests.Session()
+        # Login to get token for protected routes
+        try:
+            res = self.session.post(f"{BASE_URL}/api/login", json={
+                "username": "sora",
+                "password": "123456"
+            })
+            if res.status_code == 200:
+                self.token = res.json().get("data")
+                self.session.headers.update({"Authorization": self.token})
+            else:
+                self.token = None
+                print("Login failed, protected tests might fail.")
+        except Exception as e:
+            self.token = None
+            print(f"Login exception: {e}")
+
+    # --- Public Routes ---
+
+    def test_login(self):
+        """Test POST /api/login"""
+        res = requests.post(f"{BASE_URL}/api/login", json={
+            "username": "sora",
+            "password": "123456"
+        })
+        self.assertEqual(res.status_code, 200, "Login should succeed")
+        self.assertIn("data", res.json(), "Response should contain data (token)")
+
+    def test_public_user_info(self):
+        """Test GET /api/public/user"""
+        res = requests.get(f"{BASE_URL}/api/public/user")
+        self.assertEqual(res.status_code, 200)
+        data = res.json().get("data")
+        # Check required fields from Frontend 'UserState'
+        # userinfo.data.data.userAvatar
+        self.assertIn("userAvatar", data)
+        self.assertIn("userTalk", data)
+        self.assertIn("blogAuthor", data)
+        self.assertIn("blogTitle", data)
+
+    def test_public_social_info(self):
+        """Test GET /api/public/social"""
+        res = requests.get(f"{BASE_URL}/api/public/social")
+        self.assertEqual(res.status_code, 200)
+        # Frontend expects social.data.data
+        data = res.json().get("data")
+        self.assertIsInstance(data, dict)
+
+    def test_public_categories(self):
+        """Test GET /api/public/category"""
+        res = requests.get(f"{BASE_URL}/api/public/category")
+        self.assertEqual(res.status_code, 200)
+        data = res.json().get("data")
+        self.assertIsInstance(data, list)
+        if len(data) > 0:
+            item = data[0]
+            # Verify fields used in Head/index.tsx
+            # categoryKey, pathName, icon, categoryTitle
+            self.assertIn("categoryKey", item)
+            self.assertIn("pathName", item)
+            self.assertIn("icon", item)
+            self.assertIn("categoryTitle", item)
+
+    def test_public_notes_list(self):
+        """Test GET /api/public/notes"""
+        res = requests.get(f"{BASE_URL}/api/public/notes")
+        self.assertEqual(res.status_code, 200)
+        data = res.json().get("data")
+        self.assertIsInstance(data, list)
+    
+    def test_public_top_notes(self):
+        """Test GET /api/public/topnotes"""
+        res = requests.get(f"{BASE_URL}/api/public/topnotes")
+        self.assertEqual(res.status_code, 200)
+        data = res.json().get("data")
+        self.assertIsInstance(data, list)
+
+    def test_search_notes_by_keyword(self):
+        """Test POST /api/public/notes/search with keyword"""
+        res = requests.post(f"{BASE_URL}/api/public/notes/search", json={
+            "keyword": "Test"
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.json().get("data")
+        self.assertIsInstance(data, list)
+
+    def test_search_notes_by_category(self):
+        """Test POST /api/public/notes/search with categories (The Fix)"""
+        # Frontend Sends: { categories: title.categoryTitle, status: 'public' }
+        res = requests.post(f"{BASE_URL}/api/public/notes/search", json={
+            "categories": "Backend", # Assuming 'Backend' category exists or just checking 200 OK
+            "status": "public"
+        })
+        self.assertEqual(res.status_code, 200, "Search by categories should return 200")
+        data = res.json().get("data")
+        self.assertIsInstance(data, list, "Search result should be a list")
+
+    def test_public_tags(self):
+        """Test GET /api/public/tagone & tagtwo"""
+        res1 = requests.get(f"{BASE_URL}/api/public/tagone")
+        self.assertEqual(res1.status_code, 200, "TagOne should work")
+        
+        res2 = requests.get(f"{BASE_URL}/api/public/tagtwo")
+        self.assertEqual(res2.status_code, 200, "TagTwo should work")
+
+    def test_public_friends(self):
+        """Test GET /api/public/friends"""
+        res = requests.get(f"{BASE_URL}/api/public/friends")
+        self.assertEqual(res.status_code, 200)
+        
+    def test_public_talks(self):
+        """Test GET /api/public/talk"""
+        res = requests.get(f"{BASE_URL}/api/public/talk")
+        self.assertEqual(res.status_code, 200)
+
+    # --- Protected Routes (Requires Token) ---
+    
+    def test_auth_check(self):
+        """Test GET /api/login/auth"""
+        if not self.token: self.skipTest("No token")
+        res = self.session.get(f"{BASE_URL}/api/login/auth")
+        self.assertEqual(res.status_code, 200, "Auth check should pass with token")
+
+if __name__ == '__main__':
+    unittest.main()
