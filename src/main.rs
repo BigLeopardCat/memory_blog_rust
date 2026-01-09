@@ -4,7 +4,7 @@ use std::env;
 use std::net::SocketAddr;
 use tracing_subscriber;
 
-use memory_blog_rust::{create_router, AppState};
+use saudade_blog::{create_router, AppState};
 
 #[tokio::main]
 async fn main() {

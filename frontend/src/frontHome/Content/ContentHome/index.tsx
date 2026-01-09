@@ -117,12 +117,12 @@ const ContentHome = () => {
                 transition={{ duration: 1 }}
                 style={{display:'flex',width:'200px',justifyContent:'center',bottom:'0',position:"absolute"}}
             >
-            <p style={{position:'absolute',bottom:"100px", font: '600 12px ""'}}>{oneSay}</p>
+            <p style={{position:'absolute',bottom:"20px", whiteSpace: "nowrap", font: '600 12px ""'}}>{oneSay}</p>
                 <i className="iconfont icon-rcd-angle-double-down upAndDown" style={{fontSize: 50,position:"absolute",bottom: 20,color:'skyblue'}} onClick={handleScrollDown}/></motion.div>
         </div>
         <div className="ContentContainer dark-pic">
             {topArticles.length>0&&<div className="TopArticle" onClick={() => navigate(`/article/${topArticles[currentTop]?.key}`)}>
-                <div className="Top"><i className="iconfont icon-sticky1" style={{fontSize: 20,verticalAlign:'middle',marginRight:5}}></i>置顶</div>
+                <div className="Top" style={{transform: 'translateY(-40%)'}}><i className="iconfont icon-sticky1" style={{fontSize: 20,verticalAlign:'middle',marginRight:5}}></i>置顶</div>
                 <div className="TopCover">
                     {topArticles.map((item,index) => (
                         <img
