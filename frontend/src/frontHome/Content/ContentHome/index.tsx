@@ -11,6 +11,7 @@ import Article from "./Article.tsx";
 import {useNavigate} from "react-router-dom";
 import {SocialType} from "../../../interface/SocialType";
 import {getNotePage, getTopNotes} from "../../../apis/NoteMethods.tsx";
+import dayjs from "dayjs";
 const ContentHome = () => {
     const [currentTop,setCurrentTop] = useState(0)
     const [currentPage,setCurrentPage] = useState(1)
@@ -164,14 +165,14 @@ const ContentHome = () => {
                     <div className="topFooter">
                         <Avatar src={avatar} size={40} style={{marginRight:10}}/>
                         <span style={{marginRight:10}}>{name}</span>
-                        <span style={{fontSize:13,color:'#7f7e7e'}} className='post-date'><i className="iconfont icon-naozhong icon" style={{fontSize: 22, display: 'inline',verticalAlign: 'sub'}}></i>发布于 2024.03.02</span>
+                        <span style={{fontSize:13,color:'#7f7e7e'}} className='post-date'><i className="iconfont icon-naozhong icon" style={{fontSize: 22, display: 'inline',verticalAlign: 'sub'}}></i>发布于 {dayjs(topArticles[currentTop]?.updateTime).format("YYYY-MM-DD")}</span>
                     </div>
                 </div>
             </div>}
 
 
         {/*  其他文章  */}
-            <div style={{width:'78%'}}>
+            <div style={{width:'80%', display: 'flex', marginBottom: '20px'}}>
                 <div className='allContent'><i className="iconfont icon-wenzhang2" style={{fontSize: 25,verticalAlign:'sub',marginRight:5,color:'#7f7e7e'}}></i>文章</div>
             </div>
 

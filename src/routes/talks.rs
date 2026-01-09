@@ -62,3 +62,26 @@ pub async fn delete_talk(
     talk::Entity::delete_by_id(id).exec(&state.db).await.unwrap();
     Json(ApiResponse::success("Deleted".to_string()))
 }
+
+pub async fn update_talk(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<i32>,
+    Json(payload): Json<UpsertTalk>,
+) -> Json<ApiResponse<String>> {
+    let talk_model = talk::Entity::find_by_id(id)
+        .one(&state.db)
+        .await
+        .unwrap();
+
+    if let Some(t) = talk_model {
+        let mut active_model: talk::ActiveModel = t.into();
+        active_model.title = Set(Some(payload.title));
+        active_model.content = Set(payload.content);
+        active_model.updated_at = Set(chrono::Local::now().naive_local());
+        
+        talk::Entity::update(active_model).exec(&state.db).await.unwrap();
+        Json(ApiResponse::success("Updated".to_string()))
+    } else {
+        Json(ApiResponse { code: 404, message: "Talk not found".to_string(), data: String::default() })
+    }
+}

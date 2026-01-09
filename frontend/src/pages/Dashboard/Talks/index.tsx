@@ -43,47 +43,67 @@ const Comments = () => {
     };
 
     const change_comment = (value: Talk) => {
-        setEdit(value.talkKey)
-        showModal()
-        form.setFieldsValue({
-            talkTitle: value.talkTitle,
-            content: value.content,
-        });
+        // Must clear form first to avoid artifacts or stale data race
+        form.resetFields(); 
+        setEdit(value.talkKey);
+        setOpen(true); // Don't use showModal here to be explicit
+        
+        // Timeout to ensure modal is rendered and form instance is ready
+        setTimeout(() => {
+            form.setFieldsValue({
+                talkTitle: value.talkTitle,
+                content: value.content,
+            });
+        }, 100);
     }
 
     const handleOk = async () => {
-        if (isEdit !== 0) {
-            const data: updateTalk = {
-                talkTitle: form.getFieldsValue().talkTitle,
-                content: form.getFieldsValue().content,
-                updateTime: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss")
-            }
-            // 更新
-            updateTalkById(data,isEdit).then(async (res: { status: number; }) => {
-                if (res.status == 200) {
-                    initTalkList().then((res) => {
-                        setTalks(res)
-                        message.success("更新成功")
-                        setEdit(0);
-                        form.resetFields();
-                        setOpen(false);
-                    })
-                } else {
-                    await message.error("更新失败")
-                    setEdit(0);
-                    form.resetFields();
-                    setOpen(false);
+        try {
+            await form.validateFields();
+            setConfirmLoading(true);
+            
+            const formValues = form.getFieldsValue();
+            const nowTime = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
+
+            if (isEdit !== 0) {
+                // Update Logic
+                const data: updateTalk = {
+                    talkTitle: formValues.talkTitle,
+                    content: formValues.content,
+                    updateTime: nowTime
                 }
-            })
-        } else {
-            form.validateFields().then(() => {
-                setConfirmLoading(true);
-                onFinish();
-                message.success('发布成功');
-                setConfirmLoading(false);
-                form.resetFields();
-                setOpen(false);
-            });
+                
+                const res = await updateTalkById(data, isEdit);
+                if (res.status == 200) {
+                    const newTalks = await initTalkList();
+                    setTalks(newTalks);
+                    message.success("更新成功");
+                } else {
+                    message.error("更新失败");
+                }
+            } else {
+                // Create Logic
+                const data: Talk = {
+                    ...formValues,
+                    createTime: nowTime,
+                    updateTime: nowTime
+                }
+                const res = await createTalk(data);
+                if (res.status === 200) {
+                    const newTalks = await initTalkList();
+                    setTalks(newTalks);
+                    message.success("发布成功");
+                } else {
+                   message.error("发布失败");
+                }
+            }
+        } catch (error) {
+           console.error("Validation failed:", error);
+        } finally {
+            setConfirmLoading(false);
+            setEdit(0);
+            form.resetFields();
+            setOpen(false);
         }
     };
 
@@ -112,18 +132,8 @@ const Comments = () => {
 
     //表单提交
     const onFinish = async () => {
-        const formValues = form.getFieldsValue();
-        const data: Talk = {
-            ...formValues,
-            createTime: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-            updateTime: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss")
-        }
-        const res = await createTalk(data)
-        if(res.status === 200){
-            initTalkList().then((res) => {
-                setTalks(res)
-            })
-        }
+        // Just proxy to handleOk to keep logic unified
+        handleOk();
     };
 
     //弹窗表单
@@ -153,7 +163,6 @@ const Comments = () => {
                 <NewButton onClick={showModal}/>
                 <div style={{ display: "flex", flexDirection: 'row', alignItems: 'center' }}>
                     <h2> <i className="iconfont icon-pinglun4" style={{ fontWeight: '100', fontSize: 50, color: '#13a8a8' }} /> 说说  </h2>
-
                 </div>
                 <SearchButton style={{marginLeft: '50px'}}/>
             </div>

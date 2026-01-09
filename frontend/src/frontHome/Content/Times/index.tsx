@@ -42,7 +42,7 @@ const Times = () => {
 
             setTodayInfo({
                 year: now.getFullYear().toString(),
-                dayOfYear: dayOfYear + 1,
+                dayOfYear: dayOfYear,
                 yearPercentage: parseFloat(yearPercentage.toFixed(6)),
                 dayPercentage: dayPercentage
             });

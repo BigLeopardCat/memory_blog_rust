@@ -11,7 +11,7 @@ function getTalkList(){
 function updateTalkById(data:updateTalk,isEdit: number){
     return http({
         url: `/api/protect/talk/${isEdit}`,
-        method: "POST",
+        method: "PUT",
         data: data
     })
 }

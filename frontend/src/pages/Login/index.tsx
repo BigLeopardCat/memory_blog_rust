@@ -9,7 +9,6 @@ import getToken from '../../apis/getToken';
 import UserData from "../../interface/UserData";
 
 const Login: React.FC = () => {
-    //hooks区域
     const [account, setAccount] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const dispatch = useDispatch();
@@ -22,7 +21,6 @@ const Login: React.FC = () => {
         }
     }, [navigate]);
 
-    //回调函数区域
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         if (name === 'account') {
@@ -34,12 +32,10 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         const data:UserData = {
             username:account,
             password,
         };
-
         try {
             const status:number = await dispatch<any>(fetchToken(data))
             if (status === 200) {
@@ -53,13 +49,12 @@ const Login: React.FC = () => {
 
     const handleInvalid = (e: React.FormEvent<HTMLInputElement>) => {
         e.preventDefault();
-        // 设置自定义错误提示
         message.warning(`请填写${e.currentTarget.placeholder}`);
     };
 
     return (
         <div className="login-box">
-            <h2>Memory</h2>
+            <h2>Saudade Blog</h2>
             <form action="" onSubmit={handleSubmit}>
                 <div className="user-box">
                     <input type="text" name="account"
@@ -78,19 +73,27 @@ const Login: React.FC = () => {
                            onChange={handleChange}
                            onInvalid={handleInvalid}
                            autoComplete='off'
-                           />
+                    />
                     <label>Password</label>
                 </div>
-                <a>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <input type="submit" value="Submit" />
-                </a>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <a>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <input type="submit" value="Submit" />
+                    </a>
+                    <a onClick={() => navigate("/")} className="return-btn" style={{ cursor: "pointer" }}>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        Return
+                    </a>
+                </div>
             </form>
         </div>
-
     );
 };
 

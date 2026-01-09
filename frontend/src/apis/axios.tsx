@@ -2,7 +2,7 @@ import axios from "axios";
 import getToken from "./getToken.tsx"
 
 const http = axios.create({
-    baseURL: process.env["VITE_HTTP_BASEURL"],
+    baseURL: import.meta.env.VITE_HTTP_BASEURL || '',
     timeout: 5000
 })
 

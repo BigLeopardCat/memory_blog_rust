@@ -48,7 +48,7 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
           outline: none
 
       .barLogo
-        margin-top: 30px
+        margin-top: 15px
         margin-bottom: 30px
 
       .barContent
@@ -124,6 +124,7 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
   .webTitle
     cursor: pointer
     margin-left: 20px
+    margin-right: 30px
     color: white
     @media only screen and (max-width: 1200px)
       margin-right: 10px
@@ -140,7 +141,7 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
 
   .headBar
     width: 100%
-    margin-right: 30px
+    margin-right: 0
     height: 100%
     @media only screen and (max-width: 1200px)
       display: none
@@ -150,9 +151,9 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
         .CategoryList
           display: flex
     .CategoryList
-      width: 120%
-      left: -10%
-      top: 30px
+      width: 100%
+      left: 0
+      top: 15px
       padding-top: 15px
       background: transparent
       border-radius: 5px
@@ -174,6 +175,7 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
       
       // Fixing the triangle/icon
       .icon-Rrl_s_045
+        display: none !important
         position: absolute
         left: 50%
         top: -18px
@@ -241,11 +243,13 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
   .loginCard
     position: absolute
     right: -9px
-    top: 42px
+    top: 15px
     z-index: 100
     display: flex
     flex-direction: column
-    gap: 5px
+    gap: 0
+    padding: 0
+    background: transparent
     transition: 0.6s
     animation: cardIn 0.6s
     animation-fill-mode: forwards
@@ -313,7 +317,7 @@ $darkMode-mode-color: linear-gradient(to left, rgba(7, 7, 7, 0.33), rgba(7, 7, 7
   .onesay_content
     margin-top: 0
     margin-left: 30px
-    margin-right: 30px
+    margin-right: 0
     overflow: hidden
     white-space: normal
     max-height: 6.5em

@@ -1,4 +1,4 @@
-import {Calendar, Card, ConfigProvider, Progress, Space, theme, Checkbox, Input, Badge, Modal} from "antd";
+import {Calendar, Card, ConfigProvider, Progress, Space, theme, Checkbox, Input, Badge, Modal, Avatar} from "antd";
 import './index.sass';
 import React, {useContext, useEffect, useRef, useState} from "react";
 import axios from "axios";
@@ -130,8 +130,7 @@ const Home = () => {
             <div className='left' style={{height: '100%',width:'25%',display:'flex',flexDirection:'column'}}>
                <div className="about_logo">
                    <div className="about_me">
-                       <img src={avatar} alt=""  style={{borderRadius: '50%',border: '2px' +
-                               ' solid #b7b7b7'}}/>
+                       <Avatar src={avatar} size={130} style={{ border: "2px solid #b7b7b7" }} />
                        <div ref={typedRef} className="typed"></div>
                    </div>
                    <Space wrap style={{marginTop: 20}} className='p_hidden'>

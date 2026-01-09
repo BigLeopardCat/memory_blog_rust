@@ -48,10 +48,14 @@ const fetchToken = (data: UserData) => {
                 method: 'POST',
                 data: data
             });
+
+            if (res.data.code === 200) {
                 const token = res.data.data;
-                console.log(token)
                 dispatch(setToken({ token: token}));
-            return res.status;
+                return 200;
+            } else {
+                return res.data.code || 500;
+            }
         } catch (error) {
             throw error;
         }

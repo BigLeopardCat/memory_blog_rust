@@ -4,7 +4,7 @@ import './index.css';
 // import '../../assets/font/iconfont.css';
 import {Outlet, useNavigate} from "react-router-dom";
 import deleteToken from "../../apis/deleteToken.tsx";
-import {Button, Space, notification, message, Card, Spin} from "antd";
+import {Button, Space, notification, message, Card, Spin, Avatar} from "antd";
 import MainContext from "../../components/conText.tsx";
 import Switch from "../../components/Switch";
 import SettingButton from "../../components/Buttons/SettingButton";
@@ -222,7 +222,7 @@ const Dashboard = () => {
                                 <header>
                                     <div className="image-text">
                         <span className="image">
-                            <img src={avatar} alt="" />
+                            <Avatar src={avatar} size={45} />
                         </span>
                                         <div className="text logo-text">
                                             <span className="name">

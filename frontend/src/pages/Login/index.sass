@@ -62,7 +62,7 @@ body
     color: #03e9f4
     font-size: 16px
     text-decoration: none
-    text-transform: uppercase
+    text-transform: capitalize !important
     overflow: hidden
     transition: .5s
     margin-top: 40px
@@ -70,9 +70,9 @@ body
     input
       background: transparent
       border: none
-      color: #fff1eb
+      color: #03e9f4
       font-size: 20px
-      font-weight: 600
+    font-weight: 600
 
     &:hover
       background: #03e9f4
@@ -142,3 +142,24 @@ body
     bottom: -100%
   50%, 100%
     bottom: 100%
+
+.login-box form a.return-btn
+  color: #fff1eb !important
+  text-transform: capitalize !important
+  font-weight: 600 !important
+  input
+    color: #fff1eb !important
+  text-transform: capitalize !important
+  font-weight: 600 !important
+  &:hover
+    background: #fff1eb !important
+    color: #03e9f4 !important
+    box-shadow: 0 0 5px #fff1eb, 0 0 25px #fff1eb, 0 0 50px #fff1eb, 0 0 100px #fff1eb !important
+  span:nth-child(1)
+    background: linear-gradient(90deg, transparent, #fff1eb) !important
+  span:nth-child(2)
+    background: linear-gradient(180deg, transparent, #fff1eb) !important
+  span:nth-child(3)
+    background: linear-gradient(270deg, transparent, #fff1eb) !important
+  span:nth-child(4)
+    background: linear-gradient(360deg, transparent, #fff1eb) !important

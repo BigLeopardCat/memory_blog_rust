@@ -111,16 +111,11 @@ pub fn create_router(state: AppState) -> Router {
         )
 
         // Talks
-        .route("/api/protect/talk", 
-             post(talks::create_talk)
-        )
+        .route("/api/protect/talk", post(talks::create_talk))
         .route("/api/protect/talk/:id", 
              delete(talks::delete_talk)
-             .post(talks::create_talk) 
+             .put(talks::update_talk) 
         )
-
-        .route("/api/protected/talk", post(talks::create_talk))
-        .route("/api/protected/talk/:id", delete(talks::delete_talk))
 
         // WebSettings
         .route("/api/protected/websetting", 
