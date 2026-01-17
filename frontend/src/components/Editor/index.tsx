@@ -1,4 +1,6 @@
 import gfm from '@bytemd/plugin-gfm'
+import math from "@bytemd/plugin-math";
+import 'katex/dist/katex.css';
 import breaks from "@bytemd/plugin-breaks";
 import frontmatter from "@bytemd/plugin-frontmatter";
 import gemoji from "@bytemd/plugin-gemoji";
@@ -14,6 +16,7 @@ import {message} from "antd";
 
 const plugins = [
     gfm(),
+    math(),
     breaks(),
     frontmatter(),
     gemoji(),

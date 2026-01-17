@@ -113,7 +113,7 @@ $container-background-color-dark: linear-gradient(to left, rgba(0, 0, 0,0.6), rg
     position: relative
     cursor: pointer
     width: 80%
-    height: 600px
+    height: 640px
     //background: #212121
     //background: $pic-background-cover
     background: var(--pic-background-cover)
@@ -274,7 +274,7 @@ $container-background-color-dark: linear-gradient(to left, rgba(0, 0, 0,0.6), rg
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
       width: 90%
     .ArticleCard
-      height: 600px
+      height: 640px
       background: var(--pic-background-cover)
       --tw-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -2px rgba(0, 0, 0, .05)
       border-radius: 15px
@@ -467,3 +467,72 @@ $container-background-color-dark: linear-gradient(to left, rgba(0, 0, 0,0.6), rg
     color: var(--font-title-color) !important
   .topFooter
     color: var(--font-title-color)
+
+// Dark Mode Text Fix
+.dark .SayWords h2
+  color: white !important
+
+body[data-theme='dark'] .SayWords h2
+  color: #ffffff !important
+
+html[data-theme='dark'] .SayWords h2
+  color: #ffffff !important
+
+:global(html[data-theme='dark']) .SayWords h2
+  color: #ffffff !important
+
+// Mobile Fixes V6
+@media screen and (max-width: 768px)
+  .allArticles .ArticleCard
+    height: auto !important
+    display: flex !important
+    flex-direction: column !important
+    
+    .ArticleCover
+      height: 200px !important
+      width: 100% !important
+      position: relative !important
+      img
+        height: 100% !important
+      
+    .ArticleContent
+      height: auto !important
+      padding: 1.5rem !important
+
+/* V7 Final SpecFix */
+:global(html:not([data-theme='light']) .SayWords h2)
+  color: #ffffff !important
+:global(body:not([data-theme='light']) .SayWords h2)
+  color: #ffffff !important
+
+
+/* V9 Fix for Home Text Colors (h3 and generic text) */
+:global(html[data-theme='dark']) .SayWords h3,
+:global(html[data-theme='dark']) .SayWords h2 span,
+:global(html[data-theme='dark']) .SayWords h2,
+:global(html[data-theme='dark']) .SayWords p,
+:global(body[data-theme='dark']) .SayWords h3,
+:global(body[data-theme='dark']) .SayWords h2 span,
+:global(body[data-theme='dark']) .SayWords h2,
+:global(body[data-theme='dark']) .SayWords p,
+.dark .SayWords h3,
+.dark .SayWords h2 span,
+.dark .SayWords h2,
+.dark .SayWords p
+  color: #ffffff !important
+
+
+/* V9 Fix for Home Text Colors (h3 and generic text) */
+:global(html[data-theme='dark']) .SayWords h3,
+:global(html[data-theme='dark']) .SayWords h2 span,
+:global(html[data-theme='dark']) .SayWords h2,
+:global(html[data-theme='dark']) .SayWords p,
+:global(body[data-theme='dark']) .SayWords h3,
+:global(body[data-theme='dark']) .SayWords h2 span,
+:global(body[data-theme='dark']) .SayWords h2,
+:global(body[data-theme='dark']) .SayWords p,
+.dark .SayWords h3,
+.dark .SayWords h2 span,
+.dark .SayWords h2,
+.dark .SayWords p
+  color: #ffffff !important

@@ -104,7 +104,7 @@ const ReadArticle = () => {
                         </motion.div>
                     </div>
                     <div className='readDescription'>
-                        <i className="iconfont icon-openai" style={{color:'rgb(9,10,21)',fontSize:15,fontWeight:600,marginRight:10}}>AI概述:</i>
+                        <span style={{color:'rgb(9,10,21)',fontSize:15,fontWeight:600,marginRight:10}}>内容概述:</span>
                         <p>{article?.description}</p>
                     </div>
                     <div className='readContent markdown-body'>

@@ -181,7 +181,7 @@ const Friends = () => {
                         ) : (
                             <>
                                 <h3 className="link-title">
-                                    <span className="link-fix">友链申请</span>
+                                    <span className="link-fix" style={{ color: isDarkMode ? 'cornflowerblue' : 'black' }}>友链申请</span>
                                 </h3>
                                 <div style={{ display: 'grid',gridTemplateColumns:'repeat(auto-fit, minmax(210px,' +
                                         ' 1fr))', gridGap:90}}>

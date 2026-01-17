@@ -1,3 +1,4 @@
+import { DeleteOutlined } from '@ant-design/icons';
 import {Calendar, Card, ConfigProvider, Progress, Space, theme, Checkbox, Input, Badge, Modal, Avatar} from "antd";
 import './index.sass';
 import React, {useContext, useEffect, useRef, useState} from "react";
@@ -55,6 +56,7 @@ const Home = () => {
         setTodos(todos.map(t => t.id === id ? {...t, done: !t.done} : t));
     };
 
+    const deleteTodo = (id: number) => { setTodos(todos.filter(t => t.id !== id)); };
     const updateTodo = (id: number, text: string) => {
         setTodos(todos.map(t => t.id === id ? {...t, text} : t));
     };
@@ -171,7 +173,7 @@ const Home = () => {
                            textAlign: 'center', 
                            fontWeight: 'bold', 
                            margin: '10px 0',
-                           color: isDark === 'true' ? '#fff' : '#000'
+                           color: isDark ? '#fff' : '#000'
                         }}>
                            今天也要加油呀😀
                        </div>
@@ -213,6 +215,7 @@ const Home = () => {
                                        padding: 0
                                    }}
                                 />
+                                <DeleteOutlined onClick={() => deleteTodo(todo.id)} style={{cursor: 'pointer', color: 'red', marginLeft: '5px'}} />
                             </div>
                         ))}
                    </div>

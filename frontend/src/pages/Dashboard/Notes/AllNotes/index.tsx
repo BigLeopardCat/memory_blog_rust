@@ -16,7 +16,7 @@ import {
 import { DatePicker} from 'antd';
 import React, {useEffect, useState} from "react";
 import zhCN from "antd/lib/locale/zh_CN";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import { Table, Tag } from 'antd';
 import type { TableProps, TabsProps } from 'antd';
 import {formatNote, NoteType} from "../../../../interface/NoteType";
@@ -48,6 +48,9 @@ const AdvancedSearchForm = ({setSearchNotes}: AdvancedSearchFormProps) => {
     const onFinish = async (values: any) => {
         const data = {
             ...values,
+            is_top: values.top,
+            start_date: values.time && values.time[0] ? dayjs(values.time[0]).format('YYYY-MM-DD') : undefined,
+            end_date: values.time && values.time[1] ? dayjs(values.time[1]).format('YYYY-MM-DD') : undefined,
             // tagsLab: values.tagsLab.toString()
         }
         try {
@@ -171,6 +174,7 @@ const AdvancedSearchForm = ({setSearchNotes}: AdvancedSearchFormProps) => {
 const AllNotes = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const navigate = useNavigate()
+    const location = useLocation()
     const [staticDate,setStaticDate] = useState<NoteType[]>([])
     const [open, setOpen] = useState(false);
     const [isEdit,setEdit] = useState('')
@@ -181,8 +185,24 @@ const AllNotes = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        initNotes()
-    },[])
+        const params = new URLSearchParams(location.search);
+        const keyword = params.get('keyword');
+        if (keyword) {
+             searchAdminNotes({keyword}).then(res => {
+                if(res.status === 200){
+                    setStaticDate(res.data.data.map((item: formatNote) => {
+                        return {
+                            ...item,
+                            key: item.noteKey,
+                            noteTags: item.noteTags ? item.noteTags.split(',').map(tag => parseInt(tag, 10)) : [],
+                        }
+                    }))
+                }
+             });
+        } else {
+             initNotes();
+        }
+        },[location.search])
 
     const initNotes = async () => {
         const res = await getAdminNotes()
@@ -443,7 +463,7 @@ const AllNotes = () => {
 
             <div className="searchRes">
                 <Tabs defaultActiveKey="1" items={items} style={{marginLeft: 10}} onChange={onChange} />
-                <div style={{ overflowX: 'hidden' }}>
+                <div className='custom-scroll-container' style={{ overflowX: 'auto' }}>
                     <ConfigProvider
                         theme={{
                             components: {
@@ -452,7 +472,7 @@ const AllNotes = () => {
                             },
                         }}
                     >
-                        <Table columns={columns} dataSource={staticDate} pagination={{ pageSize: 8 }} rowSelection={rowSelection} scroll={{y:'40vh',x:1000}}/>
+                        <Table columns={columns} dataSource={staticDate} pagination={{ pageSize: 8 }} rowSelection={rowSelection} scroll={{y:'40vh',x:'max-content'}}/>
                     </ConfigProvider>
                 </div>
             </div>

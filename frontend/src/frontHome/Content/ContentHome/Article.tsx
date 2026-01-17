@@ -71,13 +71,19 @@ const Article:React.FC<ArticleOption> = ({ item, index, Categories, avatar, name
                     <div className='tags' style={{ width: '100%', marginTop: '10px' }}>
                         {renderNoteTags(item.noteTags,tagList)}
                     </div>
-                    <div className="ArticleFooter">
+                    <div className="ArticleFooter" style={{ display: 'flex', alignItems: 'center', paddingBottom: '20px' }}>
                         <Avatar src={avatar} size={40} style={{ marginRight: 10 }} />
-                        <span style={{ marginRight: 10 }}>{name}</span>
-                        <span style={{ fontSize: 13, color: '#7f7e7e' }} className='post-date'>
-                            <i className="iconfont icon-naozhong icon" style={{ fontSize: 22, display: 'inline', verticalAlign: 'sub' }}></i>
-                            发布于 {dayjs(item.updateTime).format("YYYY-MM-DD")}
-                        </span>
+                        <span style={{ fontWeight: 'bold', marginRight: 10, lineHeight: '22px', fontSize: '14px' }}>{name}</span>
+                        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                             <span style={{ fontSize: 12, color: '#7f7e7e', lineHeight: '22px' }} className='post-date'>
+                                <i className="iconfont icon-naozhong icon" style={{ fontSize: 14, display: 'inline', marginRight: '4px' }}></i>
+                                发布于 {dayjs(item.createTime).format('YYYY-MM-DD')}
+                             </span>
+                             <span style={{ position: 'absolute', top: '100%', marginTop: '6px', left: 0, fontSize: 12, color: '#7f7e7e', lineHeight: '22px', whiteSpace: 'nowrap' }} className='post-date'>
+                                <i className="iconfont icon-naozhong icon" style={{ fontSize: 14, display: 'inline', marginRight: '4px' }}></i>
+                                更新于 {dayjs(item.updateTime).format('YYYY-MM-DD')}
+                             </span>
+                        </div>
                     </div>
                 </div>
             </div>

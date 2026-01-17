@@ -9,7 +9,8 @@ import {
     Upload, Switch, Radio, TreeSelect, ConfigProvider, UploadProps, UploadFile, GetProp, message, Row, Col, Card
 } from "antd";
 import {PlusOutlined, PictureOutlined} from "@ant-design/icons";
-import React, {useEffect,  useState} from "react";
+import React, {useEffect,  useState, useContext} from "react";
+import MainContext from "../../../../components/conText.tsx";
 import dayjs from "dayjs";
 import {useDispatch, useSelector} from "react-redux";
 import {useNavigate, useParams} from "react-router-dom";
@@ -36,6 +37,7 @@ const NewNotes = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { id } = useParams();
+    const isDarkMode = useContext(MainContext) === 'true';
     const [form] = Form.useForm();
     const tagList = useSelector((state: {tags: any}) => state.tags.tag)
     const categories = useSelector((state: {categories: any}) => state.categories.categories);
@@ -213,7 +215,8 @@ const NewNotes = () => {
 
     const onFinish = async (formValues: any) => {
         // Safe string conversion for tags
-        const tagsString = (noteTag || []).join(',');
+                const tagsData = formValues.noteTags;
+        const tagsString = Array.isArray(tagsData) ? tagsData.join(',') : (tagsData || '');
 
         if (id) {
             const data = {
@@ -284,7 +287,7 @@ const NewNotes = () => {
         <div className="notes-container">
             <div className="article_title">
                 <label style={{width:115,fontSize:18,fontWeight:600}}>文章标题</label>
-                <Input style={{background: 'transparent',border: '1px solid #4096ff',width: '95%',marginRight: 10}} onChange={handleInputChange} value={noteTitle}/>
+                <Input style={{background: 'transparent',border: '1px solid #4096ff',width: '95%',marginRight: 10, color: isDarkMode ? 'white' : 'black'}} onChange={handleInputChange} value={noteTitle}/>
                 <Button type="primary" onClick={showModal} style={{float: "right"}}>
                     提交
                 </Button>

@@ -28,6 +28,7 @@ const Dashboard = () => {
     const [isDarkMode, setDarkMode] = useState(false);
     const [api, contextHolder] = notification.useNotification();
     const [loading, setLoading] = useState(false);
+    const [searchVal, setSearchVal] = useState('');
     const dispatch = useDispatch();
     const avatar = useSelector((state: { user: UserState }) => state.user.avatar);
     const name = useSelector((state: { user: UserState }) => state.user.name);
@@ -237,7 +238,7 @@ const Dashboard = () => {
                                     <div className="menu">
                                         <li className="search-box" onClick={handleSearchClick}>
                                             <i className="iconfont icon-sousuo1 icon"></i>
-                                            <input type="text" placeholder="search..." />
+                                            <input type="text" placeholder="search..." value={searchVal} onChange={(e) => setSearchVal(e.target.value)} onKeyDown={(e) => {if(e.key === "Enter") { navigate("notes?keyword="+searchVal) }}} />
                                         </li>
 
                                         <ul className="menu-links">
@@ -270,7 +271,7 @@ const Dashboard = () => {
                                                 {isDarkMode?<i className={`iconfont icon-taiyang1 icon ${isDarkMode ? 'moon' : 'sun'}`}></i>:
                                                     <i className={`iconfont icon-moonyueliang icon ${isDarkMode ? 'sun' : 'moon'}`}></i>}
                                             </div>
-                                            <span className="mode-text text">{isDarkMode ? '白日模式' : '夜间模式'}</span>
+                                            <span className="mode-text text">{isDarkMode ? '夜间模式' : '白日模式'}</span>
                                             <div className="toggle-switch">
                                                 <Switch handleModeSwitch={handleModeSwitch} isDarkMode={isDarkMode}/>
                                             </div>

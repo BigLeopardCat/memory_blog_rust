@@ -137,7 +137,7 @@ header{
 
 .image img{
     width: 45px;
-    border-radius: 6px;
+    border-radius: 50%;
 }
 
 .toggle{
@@ -374,3 +374,377 @@ li.search-box input {
 /*    opacity: 0;*/
 
 /*}*/
+.dark .ant-form-item-label > label { color: rgba(255, 255, 255, 0.85) !important; }
+.dark .ant-picker-range-separator .ant-picker-separator { color: rgba(255, 255, 255, 0.85) !important; }
+
+/* Dark Mode Tabs Fix */
+.dark .ant-tabs-tab-btn { color: rgba(255, 255, 255, 0.65) !important; }
+.dark .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color: #1677ff !important; text-shadow: none !important; }
+.dark .ant-tabs-ink-bar { background: #1677ff !important; }
+
+/* Protect FABs from shrinking */
+.MuiFab-root { flex-shrink: 0 !important; min-width: 40px !important; min-height: 40px !important; }
+
+
+
+/* Dark Mode Calendar Fixes */
+.dark .ant-picker-calendar {
+    background: transparent !important;
+    color: white !important;
+}
+.dark .ant-picker-calendar .ant-picker-content th,
+.dark .ant-picker-calendar .ant-picker-cell-inner {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+.dark .ant-picker-calendar .ant-picker-cell:hover .ant-picker-cell-inner {
+    background: #444 !important;
+}
+
+/* Fix Avatar Shape */
+.image .ant-avatar, .image .ant-avatar img {
+    border-radius: 50% !important;
+}
+
+/* Dark Mode Calendar Fixes */
+.dark .ant-picker-calendar {
+    background: #1f1f1f !important; 
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-radius: 8px;
+}
+.dark .ant-picker-calendar .ant-picker-panel {
+    background: transparent !important;
+}
+.dark .ant-picker-calendar .ant-picker-content th {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+.dark .ant-picker-calendar .ant-picker-cell-inner {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+.dark .ant-picker-calendar .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+    border: 1px solid #1677ff !important;
+}
+
+/* Fixes V5 */
+.ant-avatar > img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+::-webkit-scrollbar-thumb {
+    background: #888; 
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+}
+[data-theme='dark'] ::-webkit-scrollbar-track {
+    background: #222;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+    background: #666;
+}
+[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner {
+    color: #333333 !important; 
+}
+[data-theme='dark'] .ant-picker-calendar th {
+     color: #333333 !important;
+}
+
+/* Fixes V6 */
+
+/* Force Calendar Text Black in Dark Mode */
+html[data-theme='dark'] .ant-picker-calendar,
+html[data-theme='dark'] .ant-picker-panel,
+html[data-theme='dark'] .ant-picker-body {
+    background-color: #ffffff !important;
+}
+
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+html[data-theme='dark'] .ant-picker-calendar th,
+html[data-theme='dark'] .ant-picker-content th,
+html[data-theme='dark'] .ant-picker-body {
+    color: #000000 !important;
+}
+
+/* Ensure Home Text is white in dark mode (Global override) */
+[data-theme='dark'] .SayWords h2 {
+    color: #ffffff !important;
+}
+
+/* Scrollbar Fixes */
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 100, 100, 0.5);
+    border-radius: 4px;
+}
+
+/* V7 All Fixes */
+/* Force Scrollbar visibility globally */
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 8px !important;
+  height: 8px !important;
+  display: block !important;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 120, 120, 0.6) !important; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(200, 200, 200, 0.1);
+}
+
+/* Force Calendar Text */
+html[data-theme='dark'] .ant-picker-calendar,
+html[data-theme='dark'] .ant-picker-panel, 
+html[data-theme='dark'] .ant-picker-body {
+    background: #ffffff !important;
+}
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+html[data-theme='dark'] .ant-picker-content th {
+    color: #000000 !important;
+}
+
+/* V8 Fixes */
+
+/* 1. HIDE Scrollbar in Sidebar specifically (Restore sidebar) */
+.menu-bar::-webkit-scrollbar {
+    display: none !important;
+}
+
+/* 2. Active Sidebar Item Styling (Blue bg, Black text/icon) */
+/* .nav_select is the active class found in index.css */
+.nav_select {
+    background-color: #b7dcfa !important; /* Ensure blueish background */
+}
+.nav_select .icon,
+.nav_select .text {
+    color: #000000 !important; /* Force Black Icon and Text */
+}
+
+/* 3. Global Home Text Fix (Ultra Specific) */
+/* Trying to target the structure in Home more aggressively */
+/* .SelfDescription .SayWords h2 */
+html[data-theme='dark'] .SelfDescription .SayWords h2,
+body[data-theme='dark'] .SelfDescription .SayWords h2,
+html.dark .SelfDescription .SayWords h2,
+body.dark .SelfDescription .SayWords h2 {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important; /* Override potential gradient text */
+}
+
+/* 4. Remove Global Scrollbar Force (It broke sidebar) */
+/* We will rely on default browser scrollbar or target specific containers */
+/* Overriding previous global block */
+::-webkit-scrollbar {
+    display: initial; /* Reset */
+}
+/* But we WANT it for the Table. */
+
+/* 5. Custom Table Scrollbar */
+.custom-scroll-container::-webkit-scrollbar {
+    display: block !important;
+    height: 8px !important;
+    width: 8px !important;
+}
+.custom-scroll-container::-webkit-scrollbar-thumb {
+    background: #888 !important; 
+    border-radius: 4px;
+}
+.custom-scroll-container::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+}
+
+
+/* V9 Fixes */
+
+/* 1. Calendar Dark Mode Text Visibility */
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-content th,
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-content th,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+.dark .ant-picker-calendar .ant-picker-content th,
+.dark .ant-picker-calendar .ant-picker-cell-inner {
+    color: #000000 !important; 
+}
+
+/* 2. Sidebar Hover State */
+.menu-bar .menu-links .nav-link:hover {
+    background-color: #b7dcfa !important;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.menu-bar .menu-links .nav-link:hover .icon,
+.menu-bar .menu-links .nav-link:hover .text,
+.menu-bar .menu-links .nav-link:hover a {
+    color: #000000 !important;
+}
+
+
+/* V9 Fixes */
+
+/* 1. Calendar Dark Mode Text Visibility */
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-content th,
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-content th,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+.dark .ant-picker-calendar .ant-picker-content th,
+.dark .ant-picker-calendar .ant-picker-cell-inner {
+    color: #000000 !important; 
+}
+
+/* 2. Sidebar Hover State */
+.menu-bar .menu-links .nav-link:hover {
+    background-color: #b7dcfa !important;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.menu-bar .menu-links .nav-link:hover .icon,
+.menu-bar .menu-links .nav-link:hover .text,
+.menu-bar .menu-links .nav-link:hover a {
+    color: #000000 !important;
+}
+
+/* V11 Force Home Text White in Dark Mode (Refined) */
+html[data-theme='dark'] .SelfDescription .SayWords h2,
+html[data-theme='dark'] .SelfDescription .SayWords h3,
+html[data-theme='dark'] .SelfDescription .SayWords p,
+body[data-theme='dark'] .SelfDescription .SayWords h2,
+body[data-theme='dark'] .SelfDescription .SayWords h3,
+body[data-theme='dark'] .SelfDescription .SayWords p,
+.dark .SelfDescription .SayWords h2,
+.dark .SelfDescription .SayWords h3,
+.dark .SelfDescription .SayWords p {
+    color: #ffffff !important;
+}
+
+/* V11 Force Home Text White in Dark Mode (Refined) */
+html[data-theme='dark'] .SelfDescription .SayWords h2,
+html[data-theme='dark'] .SelfDescription .SayWords h3,
+html[data-theme='dark'] .SelfDescription .SayWords p,
+body[data-theme='dark'] .SelfDescription .SayWords h2,
+body[data-theme='dark'] .SelfDescription .SayWords h3,
+body[data-theme='dark'] .SelfDescription .SayWords p,
+.dark .SelfDescription .SayWords h2,
+.dark .SelfDescription .SayWords h3,
+.dark .SelfDescription .SayWords p {
+    color: #ffffff !important;
+}
+
+
+/* V12 Fixes */
+
+/* 1. Home Text ID Override (Strongest) */
+html[data-theme='dark'] #SayWordsID h2,
+html[data-theme='dark'] #SayWordsID h3,
+html[data-theme='dark'] #SayWordsID p,
+html[data-theme='dark'] #SayWordsID span,
+body[data-theme='dark'] #SayWordsID h2,
+body[data-theme='dark'] #SayWordsID h3,
+body[data-theme='dark'] #SayWordsID p,
+body[data-theme='dark'] #SayWordsID span,
+.dark #SayWordsID h2,
+.dark #SayWordsID h3,
+.dark #SayWordsID p,
+.dark #SayWordsID span {
+    color: #ffffff !important;
+}
+
+/* 2. Calendar: Force Light Theme Styles ALWAYS */
+/* User said: "Style exactly like light mode, except 'keep going' text" */
+.ant-picker-calendar {
+    background: #ffffff !important;
+    color: rgba(0, 0, 0, 0.85) !important;
+}
+.ant-picker-calendar .ant-picker-content th,
+.ant-picker-calendar .ant-picker-cell-inner {
+    color: rgba(0, 0, 0, 0.85) !important;
+}
+/* Override any dark mode selector that tries to darken it */
+html[data-theme='dark'] .ant-picker-calendar,
+body[data-theme='dark'] .ant-picker-calendar,
+.dark .ant-picker-calendar {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+}
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-content th,
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-content th,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-cell-inner {
+    color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3. Sidebar Hover Fix */
+/* Structure: .shell li a */
+/* Active state is .nav_select */
+/* User wants hover to look like .nav_select */
+
+.shell li a:hover {
+    background-color: #b7dcfa !important; /* Match .nav_select bg */
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.shell li:hover .icon,
+.shell li:hover .text {
+    color: #000000 !important; /* Match .nav_select text */
+}
+
+/* Ensure sub-elements also turn black on hover of parent li */
+.shell li a:hover .icon,
+.shell li a:hover .text {
+    color: #000000 !important;
+}
+
+
+
+/* V13 Adjustments */
+
+/* 1. Calendar Hover Fix: No Black Background */
+html[data-theme='dark'] .ant-picker-calendar .ant-picker-cell:hover .ant-picker-cell-inner,
+body[data-theme='dark'] .ant-picker-calendar .ant-picker-cell:hover .ant-picker-cell-inner,
+.dark .ant-picker-calendar .ant-picker-cell:hover .ant-picker-cell-inner {
+    background: transparent !important; 
+    border: 1px solid #1677ff !important;
+    color: inherit !important;
+}
+
+/* 2. Sidebar Hover (Double Check) */
+.shell li a:hover {
+    background-color: #b7dcfa !important; 
+    opacity: 1 !important;
+}
+.shell li:hover .icon, 
+.shell li:hover .text {
+    color: #000000 !important;
+    fill: #000000 !important;
+}
+
+
+/* V14 Fixes */
+html[data-theme='dark'] .shell li a:hover { background-color: transparent !important; border: 1px solid #1677ff !important; border-radius: 6px; opacity: 1 !important; }
+html[data-theme='dark'] .shell li:hover .icon, html[data-theme='dark'] .shell li:hover .text { color: #ffffff !important; }
+html:not([data-theme='dark']) .shell li a:hover { background-color: #b7dcfa !important; border: 1px solid transparent !important; }
+html:not([data-theme='dark']) .shell li:hover .icon, html:not([data-theme='dark']) .shell li:hover .text { color: #000000 !important; }
+.ArticleFooter { align-items: center !important; }
+
+/* V16 Fix Override */
+html[data-theme='dark'] .shell li a:hover { background-color: transparent !important; border: 1px solid #1677ff !important; opacity: 1 !important; }
+html[data-theme='dark'] .shell li:hover .icon, html[data-theme='dark'] .shell li:hover .text { color: #ffffff !important; }
+
+html[data-theme='dark'] .shell li a:hover { background-color: transparent !important; border: 1px solid #1677ff !important; box-shadow: 0 0 8px rgba(22, 119, 255, 0.4) !important; opacity: 1 !important; }
+html[data-theme='dark'] .shell li:hover .icon, html[data-theme='dark'] .shell li:hover .text { color: #ffffff !important; }
