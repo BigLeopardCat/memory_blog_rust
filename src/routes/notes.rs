@@ -64,14 +64,14 @@ fn map_note(n: note::Model, cat: Option<category::Model>) -> NoteDto {
         content_raw: n.content,
         description: n.description.unwrap_or_default(),
         cover: n.cover.unwrap_or_default(),
-        created_at: n.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-        updated_at: n.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+        created_at: n.created_at.and_utc().with_timezone(&chrono::FixedOffset::east_opt(8 * 3600).unwrap()).format("%Y-%m-%d %H:%M:%S").to_string(),
+        updated_at: n.updated_at.and_utc().with_timezone(&chrono::FixedOffset::east_opt(8 * 3600).unwrap()).format("%Y-%m-%d %H:%M:%S").to_string(),
         is_top: n.is_top.unwrap_or(0),
         status: n.status.unwrap_or("published".to_string()),
         category_id: cat_id,
         category_title: cat_name,
         is_public: n.is_public,
-        tags: "".to_string(), // Placeholder as tags support is missing in DB
+        tags: n.tags.unwrap_or_default(),
     }
 }
 
@@ -135,6 +135,10 @@ pub struct SearchRequest {
     pub keyword: Option<String>,
     pub categories: Option<String>,
     pub status: Option<String>,
+    // NEW FILTERS ADDED
+    pub is_top: Option<i32>,
+    pub start_date: Option<String>,
+    pub end_date: Option<String>,
 }
 
 pub async fn search_notes(
@@ -143,17 +147,21 @@ pub async fn search_notes(
 ) -> Json<ApiResponse<Vec<NoteDto>>> {
     let mut condition = Condition::all();
 
+    // PUBLIC SAFEGUARDS
+    condition = condition.add(note::Column::IsPublic.eq(true));
+    condition = condition.add(note::Column::Status.ne("draft"));
+
     if let Some(ref k) = payload.keyword {
          if !k.is_empty() {
              condition = condition.add(
                 Condition::any()
                     .add(note::Column::Title.contains(k))
-                    .add(note::Column::Content.contains(k))
+                    .add(note::Column::Content.contains(k)).add(note::Column::Tags.contains(k))
              );
          }
     }
-
-    if let Some(ref cat_name) = payload.categories {
+    
+     if let Some(ref cat_name) = payload.categories {
         let cat_model = category::Entity::find()
             .filter(category::Column::Name.eq(cat_name))
             .one(&state.db)
@@ -167,13 +175,8 @@ pub async fn search_notes(
         }
     }
     
-    if let Some(ref s) = payload.status {
-         condition = condition.add(note::Column::Status.eq(s));
-    }
-    
-    // ENFORCE PUBLIC FOR PUBLIC SEARCH
-    condition = condition.add(note::Column::IsPublic.eq(true));
-    condition = condition.add(note::Column::Status.ne("draft"));
+    // Public search likely doesn't need detailed time/top status filters, but no harm logic-wise. 
+    // They are omitted here for simplicity and focus on keyword search.
 
     let notes = note::Entity::find()
         .filter(condition)
@@ -189,19 +192,20 @@ pub async fn search_notes(
     Json(ApiResponse::success(dtos))
 }
 
-// ADMIN FUNCTION: Search ALL notes
 pub async fn search_all_notes(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<SearchRequest>,
 ) -> Json<ApiResponse<Vec<NoteDto>>> {
     let mut condition = Condition::all();
+    
+    // NO PUBLIC SAFEGUARDS (Admin Route)
 
     if let Some(ref k) = payload.keyword {
          if !k.is_empty() {
              condition = condition.add(
                 Condition::any()
                     .add(note::Column::Title.contains(k))
-                    .add(note::Column::Content.contains(k))
+                    .add(note::Column::Content.contains(k)).add(note::Column::Tags.contains(k))
              );
          }
     }
@@ -221,10 +225,28 @@ pub async fn search_all_notes(
     }
     
     if let Some(ref s) = payload.status {
+        // Allow filtering by specific status
          condition = condition.add(note::Column::Status.eq(s));
     }
     
-    // NO PUBLIC FILTER
+    // NEW FILTERS
+    if let Some(top) = payload.is_top {
+        condition = condition.add(note::Column::IsTop.eq(top));
+    }
+    
+    if let Some(ref start) = payload.start_date {
+         if let Ok(date) = chrono::NaiveDate::parse_from_str(start, "%Y-%m-%d") {
+             let datetime = date.and_hms_opt(0, 0, 0).unwrap();
+             condition = condition.add(note::Column::CreatedAt.gte(datetime));
+         }
+    }
+    
+    if let Some(ref end) = payload.end_date {
+         if let Ok(date) = chrono::NaiveDate::parse_from_str(end, "%Y-%m-%d") {
+             let datetime = date.and_hms_opt(23, 59, 59).unwrap();
+             condition = condition.add(note::Column::CreatedAt.lte(datetime));
+         }
+    }
 
     let notes = note::Entity::find()
         .filter(condition)
@@ -308,9 +330,9 @@ pub async fn create_note(
         cover: Set(payload.cover),
         is_top: Set(payload.is_top),
         status: Set(Some(status_str)),
-        created_at: Set(chrono::Local::now().naive_local()),
-        updated_at: Set(chrono::Local::now().naive_local()),
-        // tags: Set(payload.tags), // REMOVED
+        created_at: Set(chrono::Utc::now().naive_utc()),
+        updated_at: Set(chrono::Utc::now().naive_utc()),
+        tags: Set(payload.tags),
         ..Default::default()
     };
 
@@ -337,7 +359,7 @@ pub async fn update_note(
         if let Some(v) = payload.description { active_model.description = Set(Some(v)); }
         if let Some(v) = payload.cover { active_model.cover = Set(Some(v)); }
         if let Some(v) = payload.is_top { active_model.is_top = Set(Some(v)); }
-        // if let Some(v) = payload.tags { active_model.tags = Set(Some(v)); } // REMOVED
+        if let Some(v) = payload.tags { active_model.tags = Set(Some(v)); }
         
         // Handle Status and Visibility logic
         if let Some(v) = payload.status.clone() { 
@@ -359,7 +381,7 @@ pub async fn update_note(
              }
         }
 
-        active_model.updated_at = Set(chrono::Local::now().naive_local());
+        active_model.updated_at = Set(chrono::Utc::now().naive_utc());
         
         match active_model.update(&state.db).await {
             Ok(_) => Json(ApiResponse::success("Note updated successfully".to_string())),

@@ -19,6 +19,8 @@ pub struct Model {
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub is_public: bool,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub tags: Option<String>,
     pub category_id: Option<i32>,
 }
 

@@ -27,8 +27,8 @@ pub async fn list_talks(
         id: t.id,
         title: t.title.unwrap_or_default(),
         content: t.content,
-        created_at: t.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-        updated_at: t.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+        created_at: t.created_at.and_utc().with_timezone(&chrono::FixedOffset::east_opt(8 * 3600).unwrap()).format("%Y-%m-%d %H:%M:%S").to_string(),
+        updated_at: t.updated_at.and_utc().with_timezone(&chrono::FixedOffset::east_opt(8 * 3600).unwrap()).format("%Y-%m-%d %H:%M:%S").to_string(),
     }).collect();
     Json(ApiResponse::success(dtos))
 }
@@ -47,8 +47,8 @@ pub async fn create_talk(
     let t = talk::ActiveModel {
         title: Set(Some(payload.title)),
         content: Set(payload.content),
-        created_at: Set(chrono::Local::now().naive_local()),
-        updated_at: Set(chrono::Local::now().naive_local()),
+        created_at: Set(chrono::Utc::now().naive_utc()),
+        updated_at: Set(chrono::Utc::now().naive_utc()),
         ..Default::default()
     };
     talk::Entity::insert(t).exec(&state.db).await.unwrap();
@@ -77,7 +77,7 @@ pub async fn update_talk(
         let mut active_model: talk::ActiveModel = t.into();
         active_model.title = Set(Some(payload.title));
         active_model.content = Set(payload.content);
-        active_model.updated_at = Set(chrono::Local::now().naive_local());
+        active_model.updated_at = Set(chrono::Utc::now().naive_utc());
         
         talk::Entity::update(active_model).exec(&state.db).await.unwrap();
         Json(ApiResponse::success("Updated".to_string()))
